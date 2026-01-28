@@ -27,7 +27,6 @@ You can install gdalblock from GitHub with:
 pak::pak("hypertidy/gdalblock")
 ```
 
-gdalblock requires gdalraster >= 2.4.0.9073 which is installed from GitHub automatically.
 
 Please note that a lot of the S7 implementation is a bit garbled and will change. 
 

@@ -12,11 +12,9 @@ RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 Imports:
     S7,
-    gdalraster (>= 2.4.0.9073)
+    gdalraster (>= 2.3.0)
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Remotes:
-    firelab/gdalraster
 URL: https://github.com/hypertidy/gdalblock
 BugReports: https://github.com/hypertidy/gdalblock/issues
