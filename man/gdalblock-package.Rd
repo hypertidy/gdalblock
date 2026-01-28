@@ -8,6 +8,14 @@
 \description{
 Provides an S7 class for block-based (tiled) access to raster datasets via GDAL. Wraps 'gdalraster' to expose block structure and efficient block-level reading.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/hypertidy/gdalblock}
+  \item Report bugs at \url{https://github.com/hypertidy/gdalblock/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Michael Sumner \email{mdsumner@gmail.com}
 

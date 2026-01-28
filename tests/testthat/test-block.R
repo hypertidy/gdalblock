@@ -1,4 +1,4 @@
-test_that("gdalblock constructor works with system file", {
+test_that("block constructor works with system file", {
   # Use a GDAL test file if available, skip otherwise
   skip_if_not_installed("gdalraster")
 
@@ -21,9 +21,9 @@ test_that("gdalblock constructor works with system file", {
   driver$write(band = 1, xoff = 0, yoff = 0, xsize = 100, ysize = 80, seq_len(8000))
   driver$close()
 
-  b <- gdalblock(tf)
+  b <- block(tf)
 
-  #expect_s3_class(b, "gdalblock")
+  expect_s7_class(b, block)
   expect_equal(b@dsn, tf)
   expect_equal(b@dimension[["ncol"]], 100L)
   expect_equal(b@dimension[["nrow"]], 80L)
@@ -48,7 +48,7 @@ test_that("block_index returns correct offsets", {
   driver$setGeoTransform(c(0, 1, 0, 80, 0, -1))
   driver$close()
 
-  b <- gdalblock(tf)
+  b <- block(tf)
 
   # First block
   idx <- block_index(b, 0, 0)
@@ -83,7 +83,7 @@ test_that("block_bbox returns correct coordinates",
   driver$setGeoTransform(c(0, 1, 0, 80, 0, -1))
   driver$close()
 
-  b <- gdalblock(tf)
+  b <- block(tf)
 
   bb <- block_bbox(b, 0, 0)
   expect_equal(bb[[1]], 0)
@@ -112,7 +112,7 @@ test_that("read_block returns matrix of correct size", {
   driver$write(band = 1, xoff = 0, yoff = 0, xsize = 100, ysize = 80, seq_len(8000))
   driver$close()
 
-  b <- gdalblock(tf)
+  b <- block(tf)
 
   mat <- read_block(b, 0, 0)
   expect_true(is.matrix(mat))
@@ -143,13 +143,102 @@ test_that("out of range blocks throw errors", {
   )
   driver$close()
 
-  b <- gdalblock(tf)
+  b <- block(tf)
 
   expect_error(block_index(b, -1, 0), "out of range")
   expect_error(block_index(b, 0, -1), "out of range")
   expect_error(block_index(b, 10, 0), "out of range")
   expect_error(block_index(b, 0, 10), "out of range")
 })
-test_that("gdalblock class exists", {
-  expect_true(inherits(gdalblock, "S7_class"))
+test_that("block class exists", {
+  expect_true(inherits(block, "S7_class"))
+})
+
+test_that("plot_block works", {
+  skip_if_not_installed("gdalraster")
+
+  tf <- tempfile(fileext = ".tif")
+  on.exit(unlink(tf), add = TRUE)
+
+  driver <- gdalraster::create(
+    format = "GTiff",
+    dst_filename = tf,
+    xsize = 100,
+    ysize = 80,
+    nbands = 1,
+    dataType = "Int16",
+    options = c("TILED=YES", "BLOCKXSIZE=32", "BLOCKYSIZE=32"),
+    return_obj = TRUE
+  )
+  driver$setGeoTransform(c(0, 1, 0, 80, 0, -1))
+  driver$close()
+
+  b <- block(tf)
+
+  # Single block
+  bboxes <- plot_block(b, 0, 0)
+  expect_true(is.matrix(bboxes))
+  expect_equal(nrow(bboxes), 1)
+  expect_equal(ncol(bboxes), 4)
+
+
+  # Grid of blocks
+  bboxes <- plot_block(b, 0:1, 0:1)
+  expect_equal(nrow(bboxes), 4)
+
+  # Matrix input (scattered blocks)
+  bboxes <- plot_block(b, cbind(c(0, 2), c(1, 0)))
+  expect_equal(nrow(bboxes), 2)
+})
+
+test_that("plot_block_bbox validates input", {
+  skip_if_not_installed("gdalraster")
+
+  tf <- tempfile(fileext = ".tif")
+  on.exit(unlink(tf), add = TRUE)
+
+  driver <- gdalraster::create(
+    format = "GTiff",
+    dst_filename = tf,
+    xsize = 100,
+    ysize = 80,
+    nbands = 1,
+    dataType = "Int16",
+    options = c("TILED=YES", "BLOCKXSIZE=32", "BLOCKYSIZE=32"),
+    return_obj = TRUE
+  )
+  driver$setGeoTransform(c(0, 1, 0, 80, 0, -1))
+  driver$close()
+
+  b <- block(tf)
+
+  expect_error(plot_block_bbox(b, c(50, 30, 10, 60)), "xmin must be less than xmax")
+  expect_error(plot_block_bbox(b, c(10, 60, 50, 30)), "ymin must be less than ymax")
+  expect_error(plot_block_bbox(b, c(10, 30, 50)), "must be c\\(xmin, ymin, xmax, ymax\\)")
+})
+
+test_that("plot_block_ext validates input", {
+  skip_if_not_installed("gdalraster")
+
+  tf <- tempfile(fileext = ".tif")
+  on.exit(unlink(tf), add = TRUE)
+
+  driver <- gdalraster::create(
+    format = "GTiff",
+    dst_filename = tf,
+    xsize = 100,
+    ysize = 80,
+    nbands = 1,
+    dataType = "Int16",
+    options = c("TILED=YES", "BLOCKXSIZE=32", "BLOCKYSIZE=32"),
+    return_obj = TRUE
+  )
+  driver$setGeoTransform(c(0, 1, 0, 80, 0, -1))
+  driver$close()
+
+  b <- block(tf)
+
+  expect_error(plot_block_ext(b, c(50, 10, 30, 60)), "xmin must be less than xmax")
+  expect_error(plot_block_ext(b, c(10, 50, 60, 30)), "ymin must be less than ymax")
+  expect_error(plot_block_ext(b, c(10, 50, 30)), "must be c\\(xmin, xmax, ymin, ymax\\)")
 })

@@ -50,7 +50,7 @@ library(gdalblock)
 
 # Open a remote dataset - GEBCO 2024 global bathymetry
 dsn <- "/vsicurl/https://projects.pawsey.org.au/idea-gebco-tif/GEBCO_2024.tif"
-b <- gdalblock(dsn)
+b <- block(dsn)
 
 # Print shows key properties including block structure
 b
@@ -130,7 +130,7 @@ Here's how to find a block covering a specific location and plot it. We'll map T
 library(gdalblock)
 
 dsn <- "/vsicurl/https://projects.pawsey.org.au/idea-gebco-tif/GEBCO_2024.tif"
-b <- gdalblock(dsn)
+b <- block(dsn)
 
 # Tasmania is roughly at 147°E, 42°S
 # Calculate which block contains this location
