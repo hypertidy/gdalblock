@@ -225,3 +225,8 @@ b@ds$getMetadata(band = 0, domain = "IMAGE_STRUCTURE")
 - [grout](https://github.com/hypertidy/grout) - Tiling logic
 
 gdalblock is intentionally minimal - it focuses on exposing block structure for efficient partial reads, particularly useful for cloud-optimized formats and remote data access.
+
+
+## Code of Conduct
+  
+Please note that the gdalblock project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
