@@ -46,11 +46,11 @@ library(gdalblock)
 
 # Open a remote dataset - GEBCO 2024 global bathymetry
 dsn <- "/vsicurl/https://projects.pawsey.org.au/idea-gebco-tif/GEBCO_2024.tif"
-b <- gdalblock(dsn)
+b <- block(dsn)
 
 # Print shows key properties including block structure
 b
-#> gdalblock object
+#> block object
 #>  DSN      : /vsicurl/https://projects.pawsey.org.au/idea-gebco-tif/GEBCO_2024.tif 
 #>  Dim      : 86400, 43200, 1 
 #>  Res      : 0.004167, 0.004167 
@@ -187,7 +187,7 @@ We’ll map Tasmania:
 library(gdalblock)
 
 dsn <- "/vsicurl/https://projects.pawsey.org.au/idea-gebco-tif/GEBCO_2024.tif"
-b <- gdalblock(dsn)
+b <- block(dsn)
 
 # Tasmania is roughly at 147°E, 42°S
 # Calculate which block contains this location
@@ -302,3 +302,10 @@ b@ds$getMetadata(band = 0, domain = "IMAGE_STRUCTURE")
 gdalblock is intentionally minimal - it focuses on exposing block
 structure for efficient partial reads, particularly useful for
 cloud-optimized formats and remote data access.
+
+## Code of Conduct
+
+Please note that the gdalblock project is released with a [Contributor
+Code of
+Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.

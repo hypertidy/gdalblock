@@ -1,27 +1,92 @@
-#' Block class
+#' block S7 Class
 #'
-#' An S7 class representing GDAL raster block structure.
+#' An S7 class for block-based access to GDAL raster datasets.
 #'
-#' @param dsn Data source name (file path or connection string).
+#' @param dsn A dataset description (file path, URL, or any GDAL-supported URI).
+#'
 #' @return A `block` object.
+#'
+#' @details
+#' The block class wraps a `gdalraster::GDALRaster` object and provides
+#' convenient access to the block (tile) structure of the dataset.
+#'
+#' ## Properties
+#'
+#' Access properties using `@`:
+#'
+#' - `dsn`: The dataset description/URI
+#' - `bbox`: Bounding box as c(xmin, ymin, xmax, ymax)
+#' - `dimension`: Dimensions as c(ncol, nrow, nbands)
+#' - `crs`: Coordinate reference system (WKT string)
+#' - `nbands`: Number of bands
+#' - `datatype`: Character vector of data types per band
+#' - `res`: Resolution as c(xres, yres)
+#' - `blocksize`: Standard block size as c(width, height)
+#' - `nblocks`: Number of blocks as c(nx, ny)
+#' - `blocks`: List with block structure details
+#'
+#' ## Methods
+#'
+#' - `read_block(x, i, j, band)`: Read block data as matrix
+#' - `block_dim(x, i, j)`: Get block dimensions
+#' - `block_bbox(x, i, j)`: Get block bounding box
+#' - `block_index(x, i, j)`: Get pixel/line offsets
+#'
 #' @export
 #' @examples
 #' \dontrun{
 #' b <- block("/path/to/raster.tif")
+#' b@dimension
+#' b@blocksize
 #' read_block(b, 0, 0)
 #' }
 
+# Generics for methods - must be defined before class and method registrations
+#' Read a block of raster data
+#'
+#' @param x A `block` object.
+#' @param i Block column index (0-based).
+#' @param j Block row index (0-based).
+#' @param band Band number (1-based, default 1).
+#'
+#' @return A matrix of raster values.
 #' @export
 read_block <- new_generic("read_block", "x")
 
+#' Get block dimensions
+#'
+#' @param x A `block` object.
+#' @param i Block column index (0-based).
+#' @param j Block row index (0-based).
+#'
+#' @return Integer vector c(ncol, nrow).
 #' @export
-block_index <- new_generic("block_index", "x")
+block_dim <- new_generic("block_dim", "x")
 
+#' Get block bounding box
+#'
+#' @param x A `block` object.
+#' @param i Block column index (0-based).
+#' @param j Block row index (0-based).
+#'
+#' @return Numeric vector c(xmin, ymin, xmax, ymax).
 #' @export
 block_bbox <- new_generic("block_bbox", "x")
 
+#' Get block pixel/line index
+#'
+#' @param x A `block` object.
+#' @param i Block column index (0-based).
+#' @param j Block row index (0-based).
+#'
+#' @return Integer vector c(xoff, yoff, xsize, ysize).
+#' @export
+block_index <- new_generic("block_index", "x")
+
+# Class definition
+#' @export
 block <- new_class(
-  "gdalblock",
+  "block",
   properties = list(
     ds = new_property(
       class = class_any,
@@ -129,18 +194,6 @@ block <- new_class(
   }
 )
 
-method(read_block, block) <- function(x, i, j) {
-# ...existing code...
-}
-
-method(block_bbox, block) <- function(x, i, j) {
-# ...existing code...
-}
-
-method(block_index, block) <- function(x, i, j) {
-# ...existing code...
-}
-
 method(print, block) <- function(x, ..., width = getOption("width", 80L)) {
 
   dm <- x@dimension
@@ -150,7 +203,7 @@ method(print, block) <- function(x, ..., width = getOption("width", 80L)) {
   nb <- x@nblocks
   blk <- x@blocks
 
-  cat("gdalblock object\n")
+  cat("block object\n")
   cat(" DSN      :", x@dsn, "\n")
   cat(" Dim      :", paste(dm, collapse = ", "), "\n")
   cat(" Res      :", sprintf("%.6f, %.6f", rs[1], rs[2]), "\n")
@@ -185,6 +238,38 @@ method(print, block) <- function(x, ..., width = getOption("width", 80L)) {
   }
 
   invisible(x)
+}
+
+method(read_block, block) <- function(x, i, j, band = 1L) {
+  idx <- block_index(x, i, j)
+  x@.ds$read(
+    band = as.integer(band),
+    xoff = idx["xoff"],
+    yoff = idx["yoff"],
+    xsize = idx["xsize"],
+    ysize = idx["ysize"],
+    out_xsize = idx["xsize"],
+    out_ysize = idx["ysize"]
+  ) |>
+    matrix(nrow = idx["xsize"], ncol = idx["ysize"]) |>
+    t()
+}
+
+method(block_dim, block) <- function(x, i, j) {
+  idx <- block_index(x, i, j)
+  c(ncol = idx["xsize"], nrow = idx["ysize"])
+}
+
+method(block_bbox, block) <- function(x, i, j) {
+  idx <- block_index(x, i, j)
+  gt <- x@.ds$getGeoTransform()
+
+  xmin <- gt[1] + idx["xoff"] * gt[2]
+  xmax <- gt[1] + (idx["xoff"] + idx["xsize"]) * gt[2]
+  ymax <- gt[4] + idx["yoff"] * gt[6]
+  ymin <- gt[4] + (idx["yoff"] + idx["ysize"]) * gt[6]
+
+  c(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax)
 }
 
 method(block_index, block) <- function(x, i, j) {
@@ -239,7 +324,7 @@ plot_block <- new_generic("plot_block", "x")
 #'
 #' Draw rectangles for all blocks that partly or wholly intersect a bounding box.
 #'
-#' @param x A `gdalblock` object.
+#' @param x A `block` object.
 #' @param bbox Numeric vector c(xmin, ymin, xmax, ymax).
 #' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
 #' @param plot_bbox Logical; if `TRUE`, also draw the query bbox. Default `TRUE`.
@@ -251,7 +336,7 @@ plot_block <- new_generic("plot_block", "x")
 #' @export
 #' @examples
 #' \dontrun{
-#' b <- gdalblock("/path/to/raster.tif")
+#' b <- block("/path/to/raster.tif")
 #' # Plot blocks intersecting a region
 #' plot_block_bbox(b, c(100, 200, 500, 600))
 #' # Customize appearance
@@ -267,7 +352,7 @@ plot_block_bbox <- new_generic("plot_block_bbox", "x")
 #' This is identical to [plot_block_bbox()] but uses extent-style coordinate
 #' ordering (xmin, xmax, ymin, ymax) instead of bbox-style (xmin, ymin, xmax, ymax).
 #'
-#' @param x A `gdalblock` object.
+#' @param x A `block` object.
 #' @param ext Numeric vector c(xmin, xmax, ymin, ymax).
 #' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
 #' @param plot_ext Logical; if `TRUE`, also draw the query extent. Default `TRUE`.
@@ -279,7 +364,7 @@ plot_block_bbox <- new_generic("plot_block_bbox", "x")
 #' @export
 #' @examples
 #' \dontrun{
-#' b <- gdalblock("/path/to/raster.tif")
+#' b <- block("/path/to/raster.tif")
 #' # Plot blocks intersecting a region (extent style)
 #' plot_block_ext(b, c(100, 500, 200, 600))
 #' # Customize appearance
@@ -291,8 +376,7 @@ plot_block_ext <- new_generic("plot_block_ext", "x")
 
 method(plot_block, block) <- function(x, i, j = NULL, add = FALSE, ...) {
   # Handle matrix input for scattered blocks
-
-if (is.matrix(i)) {
+  if (is.matrix(i)) {
     if (ncol(i) != 2L) {
       stop("Matrix 'i' must have 2 columns (i, j pairs)", call. = FALSE)
     }
@@ -323,9 +407,9 @@ if (is.matrix(i)) {
 }
 
 method(plot_block_bbox, block) <- function(x, bbox, add = FALSE,
-                                                plot_bbox = TRUE,
-                                                bbox_args = list(border = "red", lwd = 2),
-                                                ...) {
+                                           plot_bbox = TRUE,
+                                           bbox_args = list(border = "red", lwd = 2),
+                                           ...) {
   if (length(bbox) != 4L) {
     stop("'bbox' must be c(xmin, ymin, xmax, ymax)", call. = FALSE)
   }
@@ -387,9 +471,9 @@ method(plot_block_bbox, block) <- function(x, bbox, add = FALSE,
 }
 
 method(plot_block_ext, block) <- function(x, ext, add = FALSE,
-                                               plot_ext = TRUE,
-                                               ext_args = list(border = "red", lwd = 2),
-                                               ...) {
+                                          plot_ext = TRUE,
+                                          ext_args = list(border = "red", lwd = 2),
+                                          ...) {
   if (length(ext) != 4L) {
     stop("'ext' must be c(xmin, xmax, ymin, ymax)", call. = FALSE)
   }
@@ -404,8 +488,6 @@ method(plot_block_ext, block) <- function(x, ext, add = FALSE,
   bbox <- ext[c(1L, 3L, 2L, 4L)]
 
   # Delegate to plot_block_bbox
-
   plot_block_bbox(x, bbox, add = add, plot_bbox = plot_ext,
                   bbox_args = ext_args, ...)
 }
-
