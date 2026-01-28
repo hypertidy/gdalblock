@@ -1,0 +1,20 @@
+Package: gdalblock
+Title: Block-Based Access to GDAL Raster Datasets
+Version: 0.0.0.9000
+Authors@R: 
+    person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre"))
+Description: Provides an S7 class for block-based (tiled) access to raster datasets 
+ via GDAL. Wraps 'gdalraster' to expose block structure and efficient block-level reading.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.1.0)
+Imports:
+    S7,
+    gdalraster (>= 2.4.0.9073)
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Remotes:
+    firelab/gdalraster
