@@ -1,6 +1,6 @@
 Package: gdalblock
 Title: Block-Based Access to GDAL Raster Datasets
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre"))
 Description: Provides an S7 class for block-based (tiled) access to raster datasets 
@@ -12,7 +12,8 @@ RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 Imports:
     S7,
-    gdalraster (>= 2.3.0)
+    gdalraster (>= 2.3.0),
+    wk
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

@@ -9,18 +9,16 @@ plot_block(x, ...)
 \arguments{
 \item{x}{A \code{block} object.}
 
-\item{...}{Additional arguments passed to \code{\link[=rect]{rect()}}.}
+\item{...}{Additional arguments passed to \code{\link[wk:wk_plot]{wk::wk_plot()}}.}
 
-\item{i}{Block column index (0-based). Can be a vector, or a 2-column matrix
-of (i, j) pairs (in which case \code{j} is ignored).}
+\item{i}{Block column indices (0-based). If NULL, all columns.}
 
-\item{j}{Block row index (0-based). Can be a vector. If both \code{i} and \code{j} are
-vectors, they are expanded to a grid via \code{expand.grid()}.}
+\item{j}{Block row indices (0-based). If NULL, all rows.}
 
 \item{add}{Logical; if \code{TRUE}, add to existing plot. Default \code{FALSE}.}
 }
 \value{
-Invisibly returns the bounding boxes of drawn blocks as a matrix.
+Invisibly returns the \code{wk::rct} of plotted blocks.
 }
 \description{
 Draw rectangles for specified blocks on a new or existing plot.
@@ -28,11 +26,7 @@ Draw rectangles for specified blocks on a new or existing plot.
 \examples{
 \dontrun{
 b <- block("/path/to/raster.tif")
-# Plot a single block
-plot_block(b, 0, 0)
-# Plot a grid of blocks
+plot_block(b)                         # all blocks
 plot_block(b, 0:2, 0:1, col = "lightblue")
-# Plot scattered blocks using matrix
-plot_block(b, cbind(c(0, 2, 4), c(1, 3, 0)), border = "red")
 }
 }

@@ -9,7 +9,7 @@ plot_block_bbox(x, ...)
 \arguments{
 \item{x}{A \code{block} object.}
 
-\item{...}{Additional arguments passed to \code{\link[=rect]{rect()}} for block rectangles.}
+\item{...}{Additional arguments passed to \code{\link[wk:wk_plot]{wk::wk_plot()}} for block rectangles.}
 
 \item{bbox}{Numeric vector c(xmin, ymin, xmax, ymax).}
 
@@ -17,23 +17,11 @@ plot_block_bbox(x, ...)
 
 \item{plot_bbox}{Logical; if \code{TRUE}, also draw the query bbox. Default \code{TRUE}.}
 
-\item{bbox_args}{List of arguments passed to \code{\link[=rect]{rect()}} for the bbox rectangle.}
+\item{bbox_args}{List of arguments passed to \code{\link[graphics:rect]{graphics::rect()}} for the bbox rectangle.}
 }
 \value{
-Invisibly returns a list with \code{blocks} (matrix of i,j pairs) and
-\code{bboxes} (matrix of block bounding boxes).
+Invisibly returns a list with \code{rct} (wk::rct) and \code{data} (data.frame).
 }
 \description{
-Draw rectangles for all blocks that partly or wholly intersect a bounding box.
-}
-\examples{
-\dontrun{
-b <- block("/path/to/raster.tif")
-# Plot blocks intersecting a region
-plot_block_bbox(b, c(100, 200, 500, 600))
-# Customize appearance
-plot_block_bbox(b, c(100, 200, 500, 600),
-                col = "lightgray",
-                bbox_args = list(border = "red", lwd = 2))
-}
+Draw rectangles for all blocks that intersect a bounding box.
 }

@@ -51,6 +51,10 @@ Access properties using \code{@}:
 \item \code{block_dim(x, i, j)}: Get block dimensions
 \item \code{block_bbox(x, i, j)}: Get block bounding box
 \item \code{block_index(x, i, j)}: Get pixel/line offsets
+\item \code{block_rct(x, i, j)}: Get blocks as wk::rct
+\item \code{block_data(x, i, j)}: Get blocks as data.frame with full metadata
+\item \code{blocks_in_bbox(x, bbox)}: Find blocks intersecting a bbox
+\item \code{blocks_in_ext(x, ext)}: Find blocks intersecting an extent
 }
 }
 }
@@ -60,6 +64,7 @@ b <- block("/path/to/raster.tif")
 b@dimension
 b@blocksize
 read_block(b, 0, 0)
+plot(block_rct(b))
 }
 Read a block of raster data
 

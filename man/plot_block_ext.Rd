@@ -9,7 +9,7 @@ plot_block_ext(x, ...)
 \arguments{
 \item{x}{A \code{block} object.}
 
-\item{...}{Additional arguments passed to \code{\link[=rect]{rect()}} for block rectangles.}
+\item{...}{Additional arguments passed to \code{\link[wk:wk_plot]{wk::wk_plot()}} for block rectangles.}
 
 \item{ext}{Numeric vector c(xmin, xmax, ymin, ymax).}
 
@@ -17,25 +17,12 @@ plot_block_ext(x, ...)
 
 \item{plot_ext}{Logical; if \code{TRUE}, also draw the query extent. Default \code{TRUE}.}
 
-\item{ext_args}{List of arguments passed to \code{\link[=rect]{rect()}} for the extent rectangle.}
+\item{ext_args}{List of arguments passed to \code{\link[graphics:rect]{graphics::rect()}} for the extent rectangle.}
 }
 \value{
-Invisibly returns a list with \code{blocks} (matrix of i,j pairs) and
-\code{bboxes} (matrix of block bounding boxes in xmin, ymin, xmax, ymax order).
+Invisibly returns a list with \code{rct} (wk::rct) and \code{data} (data.frame).
 }
 \description{
-Draw rectangles for all blocks that partly or wholly intersect an extent.
-This is identical to \code{\link[=plot_block_bbox]{plot_block_bbox()}} but uses extent-style coordinate
-ordering (xmin, xmax, ymin, ymax) instead of bbox-style (xmin, ymin, xmax, ymax).
-}
-\examples{
-\dontrun{
-b <- block("/path/to/raster.tif")
-# Plot blocks intersecting a region (extent style)
-plot_block_ext(b, c(100, 500, 200, 600))
-# Customize appearance
-plot_block_ext(b, c(100, 500, 200, 600),
-               col = "lightgray",
-               ext_args = list(border = "red", lwd = 2))
-}
+Draw rectangles for all blocks that intersect an extent.
+Uses extent-style coordinate ordering (xmin, xmax, ymin, ymax).
 }
