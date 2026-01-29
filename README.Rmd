@@ -205,6 +205,55 @@ contour(x_seq, y_seq_asc, t(m[nrow(m):1, ]), levels = 0,
         add = TRUE, col = "red", lwd = 2, drawlabels = FALSE)
 ```
 
+
+## Block geometry as data structures
+ 
+Block extents are available as `wk::rct` vectors for easy plotting and spatial operations:
+```{r example-rct}
+# All blocks as wk::rct (with CRS)
+rcts <- block_rct(b)
+rcts[1:3]
+
+# Subset of blocks
+block_rct(b, 0:2, 0:2)
+
+# Plot all blocks (uses wk::wk_plot internally
+plot_block(b)
+```
+
+For full metadata including pixel offsets, use `block_data()`:
+```{r example-data}
+# Returns data.frame with i, j, offsets, extents, and geometry
+df <- block_data(b, 0:2, 0:2)
+df[, c("i", "j", "xoff", "yoff", "xsize", "ysize")]
+```
+
+## Finding blocks by region
+
+Query blocks that intersect a bounding box or extent:
+```{r example-intersection}
+# Define a region of interest (bbox style: xmin, ymin, xmax, ymax)
+roi <- c(140, -45, 155, -35)  # Southeast Australia
+
+# Get intersecting blocks as wk::rct
+tiles <- blocks_in_bbox(b, roi)
+tiles
+
+# Or with full metadata
+tiles_df <- blocks_in_bbox(b, roi, data = TRUE)
+tiles_df[, c("i", "j", "xmin", "ymin", "xmax", "ymax")]
+
+# Plot the intersection
+plot_block_bbox(b, roi, col = "lightblue", border = "gray")
+```
+
+The extent-style functions use `c(xmin, xmax, ymin, ymax)` ordering:
+```{r example-ext}
+# Extent style: xmin, xmax, ymin, ymax
+roi_ext <- c(140, 155, -45, -35)
+blocks_in_ext(b, roi_ext)
+```
+
 ## Accessing the underlying GDALRaster object
 
 If you need full access to the gdalraster API, the underlying `GDALRaster` object is available:
