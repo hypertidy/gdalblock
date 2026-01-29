@@ -31,6 +31,10 @@
 #' - `block_dim(x, i, j)`: Get block dimensions
 #' - `block_bbox(x, i, j)`: Get block bounding box
 #' - `block_index(x, i, j)`: Get pixel/line offsets
+#' - `block_rct(x, i, j)`: Get blocks as wk::rct
+#' - `block_data(x, i, j)`: Get blocks as data.frame with full metadata
+#' - `blocks_in_bbox(x, bbox)`: Find blocks intersecting a bbox
+#' - `blocks_in_ext(x, ext)`: Find blocks intersecting an extent
 #'
 #' @export
 #' @examples
@@ -39,9 +43,11 @@
 #' b@dimension
 #' b@blocksize
 #' read_block(b, 0, 0)
+#' plot(block_rct(b))
 #' }
 
 # Generics for methods - must be defined before class and method registrations
+
 #' Read a block of raster data
 #'
 #' @param x A `block` object.
@@ -82,6 +88,128 @@ block_bbox <- new_generic("block_bbox", "x")
 #' @return Integer vector c(xoff, yoff, xsize, ysize).
 #' @export
 block_index <- new_generic("block_index", "x")
+
+#' Get block rectangles as wk::rct
+#'
+#' @param x A `block` object.
+#' @param i Block column indices (0-based). If NULL, all columns.
+#' @param j Block row indices (0-based). If NULL, all rows.
+#' @param ... Ignored.
+#'
+#' @return A `wk::rct` vector of block extents with CRS.
+#' @export
+#' @examples
+#' \dontrun{
+#' b <- block("/path/to/raster.tif")
+#' block_rct(b)              # all blocks
+#' block_rct(b, 0, 0)        # single block
+#' block_rct(b, 0:3, 0:2)    # grid of blocks
+#' plot(block_rct(b))        # wk plotting
+#' }
+block_rct <- new_generic("block_rct", "x")
+
+#' Get block metadata as data frame
+#'
+#' @param x A `block` object.
+#' @param i Block column indices (0-based). If NULL, all columns.
+#' @param j Block row indices (0-based). If NULL, all rows.
+#' @param ... Ignored.
+#'
+#' @return A data.frame with columns: i, j, xoff, yoff, xsize, ysize,
+#'   xmin, ymin, xmax, ymax, and geometry (wk::rct).
+#' @export
+#' @examples
+#' \dontrun{
+#' b <- block("/path/to/raster.tif")
+#' block_data(b)              # all blocks with full metadata
+#' block_data(b, 0:2, 0:2)    # subset
+#' }
+block_data <- new_generic("block_data", "x")
+
+#' Find blocks intersecting a bounding box
+#'
+#' @param x A `block` object.
+#' @param bbox Numeric vector c(xmin, ymin, xmax, ymax).
+#' @param data If TRUE, return full block_data(). If FALSE (default), return wk::rct.
+#' @param ... Ignored.
+#'
+#' @return A `wk::rct` vector or data.frame of intersecting blocks.
+#' @export
+#' @examples
+#' \dontrun{
+#' b <- block("/path/to/raster.tif")
+#' blocks_in_bbox(b, c(100, 200, 500, 600))
+#' blocks_in_bbox(b, c(100, 200, 500, 600), data = TRUE)
+#' }
+blocks_in_bbox <- new_generic("blocks_in_bbox", "x")
+
+#' Find blocks intersecting an extent
+#'
+#' @param x A `block` object.
+#' @param ext Numeric vector c(xmin, xmax, ymin, ymax).
+#' @param data If TRUE, return full block_data(). If FALSE (default), return wk::rct.
+#' @param ... Ignored.
+#'
+#' @return A `wk::rct` vector or data.frame of intersecting blocks.
+#' @export
+#' @examples
+#' \dontrun{
+#' b <- block("/path/to/raster.tif")
+#' blocks_in_ext(b, c(100, 500, 200, 600))
+#' }
+blocks_in_ext <- new_generic("blocks_in_ext", "x")
+
+#' Plot blocks
+#'
+#' Draw rectangles for specified blocks on a new or existing plot.
+#'
+#' @param x A `block` object.
+#' @param i Block column indices (0-based). If NULL, all columns.
+#' @param j Block row indices (0-based). If NULL, all rows.
+#' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
+#' @param ... Additional arguments passed to [wk::wk_plot()].
+#'
+#' @return Invisibly returns the `wk::rct` of plotted blocks.
+#' @export
+#' @examples
+#' \dontrun{
+#' b <- block("/path/to/raster.tif")
+#' plot_block(b)                         # all blocks
+#' plot_block(b, 0:2, 0:1, col = "lightblue")
+#' }
+plot_block <- new_generic("plot_block", "x")
+
+#' Plot blocks within a bounding box
+#'
+#' Draw rectangles for all blocks that intersect a bounding box.
+#'
+#' @param x A `block` object.
+#' @param bbox Numeric vector c(xmin, ymin, xmax, ymax).
+#' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
+#' @param plot_bbox Logical; if `TRUE`, also draw the query bbox. Default `TRUE`.
+#' @param bbox_args List of arguments passed to [graphics::rect()] for the bbox rectangle.
+#' @param ... Additional arguments passed to [wk::wk_plot()] for block rectangles.
+#'
+#' @return Invisibly returns a list with `rct` (wk::rct) and `data` (data.frame).
+#' @export
+plot_block_bbox <- new_generic("plot_block_bbox", "x")
+
+#' Plot blocks within an extent
+#'
+#' Draw rectangles for all blocks that intersect an extent.
+#' Uses extent-style coordinate ordering (xmin, xmax, ymin, ymax).
+#'
+#' @param x A `block` object.
+#' @param ext Numeric vector c(xmin, xmax, ymin, ymax).
+#' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
+#' @param plot_ext Logical; if `TRUE`, also draw the query extent. Default `TRUE`.
+#' @param ext_args List of arguments passed to [graphics::rect()] for the extent rectangle.
+#' @param ... Additional arguments passed to [wk::wk_plot()] for block rectangles.
+#'
+#' @return Invisibly returns a list with `rct` (wk::rct) and `data` (data.frame).
+#' @export
+plot_block_ext <- new_generic("plot_block_ext", "x")
+
 
 # Class definition
 #' @export
@@ -204,6 +332,7 @@ method(print, block) <- function(x, ..., width = getOption("width", 80L)) {
   blk <- x@blocks
 
   cat("block object\n")
+
   cat(" DSN      :", x@dsn, "\n")
   cat(" Dim      :", paste(dm, collapse = ", "), "\n")
   cat(" Res      :", sprintf("%.6f, %.6f", rs[1], rs[2]), "\n")
@@ -239,6 +368,11 @@ method(print, block) <- function(x, ..., width = getOption("width", 80L)) {
 
   invisible(x)
 }
+
+
+# -----------------------------------------------------------------------------
+# Core block accessors
+# -----------------------------------------------------------------------------
 
 method(read_block, block) <- function(x, i, j, band = 1L) {
   idx <- block_index(x, i, j)
@@ -294,116 +428,152 @@ method(block_index, block) <- function(x, i, j) {
     xsize = as.integer(xsize), ysize = as.integer(ysize))
 }
 
-#' Plot blocks
-#'
-#' Draw rectangles for specified blocks on a new or existing plot.
-#'
-#' @param x A `block` object.
-#' @param i Block column index (0-based). Can be a vector, or a 2-column matrix
-#'   of (i, j) pairs (in which case `j` is ignored).
-#' @param j Block row index (0-based). Can be a vector. If both `i` and `j` are
-#'   vectors, they are expanded to a grid via `expand.grid()`.
-#' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
-#' @param ... Additional arguments passed to [rect()].
-#'
-#' @return Invisibly returns the bounding boxes of drawn blocks as a matrix.
-#' @export
-#' @examples
-#' \dontrun{
-#' b <- block("/path/to/raster.tif")
-#' # Plot a single block
-#' plot_block(b, 0, 0)
-#' # Plot a grid of blocks
-#' plot_block(b, 0:2, 0:1, col = "lightblue")
-#' # Plot scattered blocks using matrix
-#' plot_block(b, cbind(c(0, 2, 4), c(1, 3, 0)), border = "red")
-#' }
-plot_block <- new_generic("plot_block", "x")
 
-#' Plot blocks within a bounding box
-#'
-#' Draw rectangles for all blocks that partly or wholly intersect a bounding box.
-#'
-#' @param x A `block` object.
-#' @param bbox Numeric vector c(xmin, ymin, xmax, ymax).
-#' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
-#' @param plot_bbox Logical; if `TRUE`, also draw the query bbox. Default `TRUE`.
-#' @param bbox_args List of arguments passed to [rect()] for the bbox rectangle.
-#' @param ... Additional arguments passed to [rect()] for block rectangles.
-#'
-#' @return Invisibly returns a list with `blocks` (matrix of i,j pairs) and
-#'   `bboxes` (matrix of block bounding boxes).
-#' @export
-#' @examples
-#' \dontrun{
-#' b <- block("/path/to/raster.tif")
-#' # Plot blocks intersecting a region
-#' plot_block_bbox(b, c(100, 200, 500, 600))
-#' # Customize appearance
-#' plot_block_bbox(b, c(100, 200, 500, 600),
-#'                 col = "lightgray",
-#'                 bbox_args = list(border = "red", lwd = 2))
-#' }
-plot_block_bbox <- new_generic("plot_block_bbox", "x")
+# -----------------------------------------------------------------------------
+# Block geometry as data structures
+# -----------------------------------------------------------------------------
 
-#' Plot blocks within an extent
-#'
-#' Draw rectangles for all blocks that partly or wholly intersect an extent.
-#' This is identical to [plot_block_bbox()] but uses extent-style coordinate
-#' ordering (xmin, xmax, ymin, ymax) instead of bbox-style (xmin, ymin, xmax, ymax).
-#'
-#' @param x A `block` object.
-#' @param ext Numeric vector c(xmin, xmax, ymin, ymax).
-#' @param add Logical; if `TRUE`, add to existing plot. Default `FALSE`.
-#' @param plot_ext Logical; if `TRUE`, also draw the query extent. Default `TRUE`.
-#' @param ext_args List of arguments passed to [rect()] for the extent rectangle.
-#' @param ... Additional arguments passed to [rect()] for block rectangles.
-#'
-#' @return Invisibly returns a list with `blocks` (matrix of i,j pairs) and
-#'   `bboxes` (matrix of block bounding boxes in xmin, ymin, xmax, ymax order).
-#' @export
-#' @examples
-#' \dontrun{
-#' b <- block("/path/to/raster.tif")
-#' # Plot blocks intersecting a region (extent style)
-#' plot_block_ext(b, c(100, 500, 200, 600))
-#' # Customize appearance
-#' plot_block_ext(b, c(100, 500, 200, 600),
-#'                col = "lightgray",
-#'                ext_args = list(border = "red", lwd = 2))
-#' }
-plot_block_ext <- new_generic("plot_block_ext", "x")
+method(block_rct, block) <- function(x, i = NULL, j = NULL, ...) {
+  nb <- x@nblocks
 
-method(plot_block, block) <- function(x, i, j = NULL, add = FALSE, ...) {
-  # Handle matrix input for scattered blocks
-  if (is.matrix(i)) {
-    if (ncol(i) != 2L) {
-      stop("Matrix 'i' must have 2 columns (i, j pairs)", call. = FALSE)
-    }
-    pairs <- i
-  } else {
-    # Vectorized i and j - expand to grid
-    if (is.null(j)) {
-      stop("'j' is required when 'i' is not a matrix", call. = FALSE)
-    }
-    pairs <- as.matrix(expand.grid(i = as.integer(i), j = as.integer(j)))
+  if (is.null(i)) i <- seq.int(0L, nb[1] - 1L)
+  if (is.null(j)) j <- seq.int(0L, nb[2] - 1L)
+
+  pairs <- expand.grid(i = as.integer(i), j = as.integer(j))
+
+  bboxes <- mapply(
+    function(ii, jj) block_bbox(x, ii, jj),
+    pairs$i, pairs$j,
+    SIMPLIFY = FALSE
+  )
+
+  # block_bbox returns c(xmin, ymin, xmax, ymax)
+  coords <- do.call(rbind, bboxes)
+
+  wk::rct(
+    xmin = coords[, 1],
+    ymin = coords[, 2],
+    xmax = coords[, 3],
+    ymax = coords[, 4],
+    crs = x@crs
+  )
+}
+
+method(block_data, block) <- function(x, i = NULL, j = NULL, ...) {
+  nb <- x@nblocks
+
+  if (is.null(i)) i <- seq.int(0L, nb[1] - 1L)
+  if (is.null(j)) j <- seq.int(0L, nb[2] - 1L)
+
+  pairs <- expand.grid(i = as.integer(i), j = as.integer(j))
+  n <- nrow(pairs)
+
+  # Pre-allocate
+
+  idx <- matrix(0L, nrow = n, ncol = 4)
+  bbox <- matrix(0, nrow = n, ncol = 4)
+
+  for (k in seq_len(n)) {
+    idx[k, ] <- block_index(x, pairs$i[k], pairs$j[k])
+    bbox[k, ] <- block_bbox(x, pairs$i[k], pairs$j[k])
   }
 
-  # Get bboxes for all blocks
-  bboxes <- t(apply(pairs, 1L, function(p) block_bbox(x, p[1L], p[2L])))
-  colnames(bboxes) <- c("xmin", "ymin", "xmax", "ymax")
+  data.frame(
+    i = pairs$i,
+    j = pairs$j,
+    xoff = idx[, 1],
+    yoff = idx[, 2],
+    xsize = idx[, 3],
+    ysize = idx[, 4],
+    xmin = bbox[, 1],
+    ymin = bbox[, 2],
+    xmax = bbox[, 3],
+    ymax = bbox[, 4],
+    geometry = wk::rct(
+      xmin = bbox[, 1],
+      ymin = bbox[, 2],
+      xmax = bbox[, 3],
+      ymax = bbox[, 4],
+      crs = x@crs
+    )
+  )
+}
 
-  # Setup plot if needed
+
+# -----------------------------------------------------------------------------
+# Block intersection queries
+# -----------------------------------------------------------------------------
+
+#' Convert bbox to block index ranges (internal helper)
+#' @noRd
+bbox_to_block_range <- function(x, bbox) {
+  full_bbox <- x@bbox
+  bs <- x@blocksize
+  res <- x@res
+  nb <- x@nblocks
+
+  # Convert bbox to block indices
+  i_min <- floor((bbox[1] - full_bbox[1]) / (bs[1] * res[1]))
+  i_max <- floor((bbox[3] - full_bbox[1]) / (bs[1] * res[1]))
+  j_min <- floor((full_bbox[4] - bbox[4]) / (bs[2] * res[2]))
+  j_max <- floor((full_bbox[4] - bbox[2]) / (bs[2] * res[2]))
+
+  # Clamp to valid range
+  list(
+    i_min = max(0L, as.integer(i_min)),
+    i_max = min(nb[1] - 1L, as.integer(i_max)),
+    j_min = max(0L, as.integer(j_min)),
+    j_max = min(nb[2] - 1L, as.integer(j_max))
+  )
+}
+
+method(blocks_in_bbox, block) <- function(x, bbox, data = FALSE, ...) {
+  if (length(bbox) != 4L) {
+    stop("'bbox' must be c(xmin, ymin, xmax, ymax)", call. = FALSE)
+  }
+
+  rng <- bbox_to_block_range(x, bbox)
+
+  if (rng$i_min > rng$i_max || rng$j_min > rng$j_max) {
+    if (data) {
+      return(block_data(x, integer(0), integer(0)))
+    } else {
+      return(wk::rct(crs = x@crs))
+    }
+  }
+
+  if (data) {
+    block_data(x, rng$i_min:rng$i_max, rng$j_min:rng$j_max)
+  } else {
+    block_rct(x, rng$i_min:rng$i_max, rng$j_min:rng$j_max)
+  }
+}
+
+method(blocks_in_ext, block) <- function(x, ext, data = FALSE, ...) {
+  if (length(ext) != 4L) {
+    stop("'ext' must be c(xmin, xmax, ymin, ymax)", call. = FALSE)
+  }
+  # Convert ext (xmin, xmax, ymin, ymax) to bbox (xmin, ymin, xmax, ymax)
+  bbox <- ext[c(1L, 3L, 2L, 4L)]
+  blocks_in_bbox(x, bbox, data = data, ...)
+}
+
+
+# -----------------------------------------------------------------------------
+# Plotting - thin wrappers around block_rct / blocks_in_*
+# -----------------------------------------------------------------------------
+
+method(plot_block, block) <- function(x, i = NULL, j = NULL, add = FALSE, ...) {
+  rcts <- block_rct(x, i, j)
+
   if (!add) {
     full_bbox <- x@bbox
     plot(NULL, xlim = full_bbox[c(1, 3)], ylim = full_bbox[c(2, 4)],
          asp = 1, xlab = "x", ylab = "y")
   }
 
-  # Draw rectangles
-  rect(bboxes[, "xmin"], bboxes[, "ymin"], bboxes[, "xmax"], bboxes[, "ymax"], ...)
-
-  invisible(bboxes)
+  wk::wk_plot(rcts, add = TRUE, ...)
+  invisible(rcts)
 }
 
 method(plot_block_bbox, block) <- function(x, bbox, add = FALSE,
@@ -420,45 +590,19 @@ method(plot_block_bbox, block) <- function(x, bbox, add = FALSE,
     stop("'bbox' ymin must be less than ymax", call. = FALSE)
   }
 
-  # Get raster properties
-  full_bbox <- x@bbox
-  bs <- x@blocksize
-  res <- x@res
-  nb <- x@nblocks
-
-  # Convert bbox to block indices
-  # Block i covers pixels from i*bs[1] to (i+1)*bs[1]-1
-  # In geo coords: xmin + i*bs[1]*res[1] to xmin + (i+1)*bs[1]*res[1]
-  i_min <- floor((bbox[1] - full_bbox[1]) / (bs[1] * res[1]))
-  i_max <- floor((bbox[3] - full_bbox[1]) / (bs[1] * res[1]))
-  j_min <- floor((full_bbox[4] - bbox[4]) / (bs[2] * res[2]))
-  j_max <- floor((full_bbox[4] - bbox[2]) / (bs[2] * res[2]))
-
-  # Clamp to valid range
-  i_min <- max(0L, as.integer(i_min))
-  i_max <- min(nb[1] - 1L, as.integer(i_max))
-  j_min <- max(0L, as.integer(j_min))
-  j_max <- min(nb[2] - 1L, as.integer(j_max))
-
-  # Generate block pairs
-  if (i_min > i_max || j_min > j_max) {
-    pairs <- matrix(integer(0), ncol = 2L)
-    bboxes <- matrix(numeric(0), ncol = 4L)
-  } else {
-    pairs <- as.matrix(expand.grid(i = i_min:i_max, j = j_min:j_max))
-    bboxes <- t(apply(pairs, 1L, function(p) block_bbox(x, p[1L], p[2L])))
-  }
-  colnames(bboxes) <- c("xmin", "ymin", "xmax", "ymax")
+  rcts <- blocks_in_bbox(x, bbox, data = FALSE)
+  block_df <- blocks_in_bbox(x, bbox, data = TRUE)
 
   # Setup plot if needed
   if (!add) {
+    full_bbox <- x@bbox
     plot(NULL, xlim = full_bbox[c(1, 3)], ylim = full_bbox[c(2, 4)],
          asp = 1, xlab = "x", ylab = "y")
   }
 
   # Draw block rectangles
-  if (nrow(bboxes) > 0L) {
-    rect(bboxes[, "xmin"], bboxes[, "ymin"], bboxes[, "xmax"], bboxes[, "ymax"], ...)
+  if (length(rcts) > 0L) {
+    wk::wk_plot(rcts, add = TRUE, ...)
   }
 
   # Draw query bbox
@@ -467,7 +611,7 @@ method(plot_block_bbox, block) <- function(x, bbox, add = FALSE,
                          xright = bbox[3], ytop = bbox[4]), bbox_args))
   }
 
-  invisible(list(blocks = pairs, bboxes = bboxes))
+  invisible(list(rct = rcts, data = block_df))
 }
 
 method(plot_block_ext, block) <- function(x, ext, add = FALSE,
@@ -487,7 +631,6 @@ method(plot_block_ext, block) <- function(x, ext, add = FALSE,
   # Convert ext (xmin, xmax, ymin, ymax) to bbox (xmin, ymin, xmax, ymax)
   bbox <- ext[c(1L, 3L, 2L, 4L)]
 
-  # Delegate to plot_block_bbox
   plot_block_bbox(x, bbox, add = add, plot_bbox = plot_ext,
                   bbox_args = ext_args, ...)
 }
